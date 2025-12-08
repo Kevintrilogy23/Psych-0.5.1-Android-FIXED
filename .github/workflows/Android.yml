@@ -1,0 +1,132 @@
+name: Build Android (Psych Engine / FNF) - 2025
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  buildAndroid:
+    runs-on: ubuntu-latest
+    env:
+      # Ajuste se necessário
+      ANDROID_API_LEVEL: 34
+      ANDROID_BUILD_TOOLS: "34.0.0"
+      NDK_VERSION: "r21e"
+
+    steps:
+      # --- Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- Java (JDK 17 required by recent sdkmanager)
+      - name: Setup Java (Temurin 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # --- Setup Android SDK (install commandline-tools + platform-tools + platforms/build-tools)
+      - name: Setup Android SDK + packages
+        uses: android-actions/setup-android@v3
+        with:
+          # instala commandline-tools + platform-tools + platforms;android-${ANDROID_API_LEVEL} + build-tools
+          packages: >-
+            cmdline-tools;latest,
+            platform-tools,
+            platforms;android-${{ env.ANDROID_API_LEVEL }},
+            build-tools;${{ env.ANDROID_BUILD_TOOLS }}
+          # se quiser evitar instalar plataformas pesadas, deixe packages: '' e instale manualmente depois
+        env:
+          JAVA_HOME: ${{ runner.temp }}/java_home
+
+      # --- Setup Android NDK (r21e recomendado para hxcpp compatibility)
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: ${{ env.NDK_VERSION }}
+
+      # --- Haxe
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.2.5
+
+      # --- Haxelib deps (cache haxelib + hxcpp build cache optional)
+      - name: Cache haxelib and hxcpp build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.haxelib
+            ~/.local/share/haxelib
+            ~/.hxcpp
+          key: haxelib-${{ runner.os }}-${{ hashFiles('**/haxelib.json') }}-${{ github.run_id }}
+          restore-keys: |
+            haxelib-${{ runner.os }}-
+
+      - name: Install Haxelib Dependencies
+        run: |
+          set -e
+          haxelib setup ~/haxelib
+          haxelib install hxcpp -y
+          haxelib install lime 7.9.0 -y
+          haxelib install openfl 9.1.0 -y
+          haxelib install flixel -y || true
+          haxelib install flixel-tools -y || true
+          haxelib install flixel-ui -y || true
+          haxelib install flixel-addons -y || true
+          haxelib install hscript -y || true
+          haxelib install hxp -y || true
+          haxelib install hxCodec -y || true
+          # git libs usados por alguns ports/mods (ajuste se não usar)
+          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc || true
+          haxelib git flxanimate https://github.com/Dot-Stuff/flxanimate || true
+          haxelib git linc_luajit https://github.com/MAJigsaw77/linc_luajit || true
+          haxelib git extension-webview https://github.com/MatheusSilver/extension-webview --quiet || true
+          haxelib git extension-videoview https://github.com/MAJigsaw77/extension-videoview --quiet || true
+          haxelib git extension-androidtools https://github.com/MAJigsaw77/extension-androidtools || true
+          haxelib list
+
+      # --- Configure Lime / OpenFL (point to installed Android SDK/NDK)
+      - name: Configure Lime/OpenFL
+        run: |
+          set -e
+          # lime setup
+          haxelib run lime setup -y
+          # configure paths (use outputs from setup-ndk)
+          haxelib run lime config ANDROID_SDK $ANDROID_HOME
+          haxelib run lime config ANDROID_NDK_ROOT ${{ steps.setup-ndk.outputs.ndk-path }}
+          haxelib run lime config JAVA_HOME $JAVA_HOME || true
+          haxelib set lime 7.9.0
+          haxelib set openfl 9.1.0
+          haxelib list
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      # --- Optional: show Java + sdkmanager versions to debug quickly
+      - name: Diagnostic: Java + sdkmanager
+        run: |
+          java -version || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --version || true
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+
+      # --- Build command (ajuste flags conforme seu projeto)
+      - name: Build Android APK (debug)
+        run: |
+          set -e
+          # use debug build (mais simples). Para release, trate assinatura.
+          haxelib run lime build android -debug --app-version="2025.12.${{ github.run_id }}"
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      # --- Upload artifact (APK)
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FNF-Android-APK
+          path: |
+            export/release/android/bin/app/build/outputs/apk/debug/*.apk
