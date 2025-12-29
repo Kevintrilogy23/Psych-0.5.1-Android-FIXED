@@ -1,106 +1,79 @@
-name: Build Android Psych Engine (Stable 2025)
+name: Android Build
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
-  buildAndroid:
-    runs-on: ubuntu-latest
-
-    env:
-      ANDROID_API_LEVEL: 34
-      ANDROID_BUILD_TOOLS: "34.0.0"
-      NDK_VERSION: r21e
-
+  build:
+    name: Android Build
+    permissions: write-all
+    runs-on: ubuntu-24.04
     steps:
-    # ============================
-    # CHECKOUT
-    # ============================
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@main
 
-    # ============================
-    # JAVA (OBRIGATÓRIO JDK 17)
-    # ============================
-    - name: Setup Java 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 17
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: 4.3.2
 
-    # ============================
-    # ANDROID SDK (ATUAL)
-    # ============================
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        packages: >-
-          cmdline-tools;latest,
-          platform-tools,
-          platforms;android-34,
-          build-tools;34.0.0
+      - name: Restore existing build cache for faster compilation
+        uses: actions/cache@v4.2.3
+        with:
+          key: cache-build-psych-android
+          path: |
+            .haxelib/
+            export/release/android/haxe/
+            export/release/android/obj/
+      - name: Install Libraries
+        run: |
+         haxelib install hmm --quiet
+         haxelib run hmm setup --quiet
+         haxelib run hmm install --quiet
+         haxelib run lime rebuild hxcpp
+      - name: Configure Android
+        run: |
+          haxelib run lime setup -alias -y
+          haxelib run lime config ANDROID_SDK $ANDROID_HOME
+          haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_LATEST_HOME
+          haxelib run lime config JAVA_HOME $JAVA_HOME_17_X64
+          haxelib run lime config ANDROID_SETUP true
+      - name: Compile
+        run: haxelib run lime build android -release
 
-    # ============================
-    # ANDROID NDK (COMPATÍVEL HXCPP)
-    # ============================
-    - name: Setup Android NDK
-      id: setup-ndk
-      uses: nttld/setup-ndk@v1
-      with:
-        ndk-version: r21e
-
-    # ============================
-    # HAXE
-    # ============================
-    - name: Setup Haxe
-      uses: krdlab/setup-haxe@v1
-      with:
-        haxe-version: 4.2.5
-
-    # ============================
-    # HAXELIB DEPENDÊNCIAS
-    # ============================
-    - name: Install Haxelib Dependencies
-      run: |
-        set -e
-        haxelib setup ~/haxelib
-        haxelib install hxcpp -y
-        haxelib install lime 7.9.0 -y
-        haxelib install openfl 9.1.0 -y
-        haxelib install flixel -y
-        haxelib install flixel-tools -y
-        haxelib install flixel-ui -y
-        haxelib install flixel-addons -y
-        haxelib install hscript -y
-        haxelib install hxp -y
-        haxelib install hxCodec -y
-
-        # libs usadas em Psych Engine / ports
-        haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc || true
-        haxelib git flxanimate https://github.com/Dot-Stuff/flxanimate || true
-        haxelib git linc_luajit https://github.com/MAJigsaw77/linc_luajit || true
-        haxelib git extension-webview https://github.com/MatheusSilver/extension-webview || true
-        haxelib git extension-videoview https://github.com/MAJigsaw77/extension-videoview || true
-        haxelib git extension-androidtools https://github.com/MAJigsaw77/extension-androidtools || true
-
-        haxelib list
-
-    # ============================
-    # CONFIGURAR LIME
-    # ============================
-    - name: Configure Lime
-      run: |
-        haxelib run lime setup -y
-        haxelib run lime config ANDROID_SDK $ANDROID_HOME
-        haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME
-        haxelib run lime config JAVA_HOME $JAVA_HOME
-        haxelib set lime 7.9.0
-        haxelib set openfl 9.1.0
-        haxelib list
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: Psych Engine Android
+          path: export/release/android/bin/app/build/outputs/apk
+          if-no-files-found: error
+      - name: Clearing already existing cache
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const caches = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            })
+            for (const cache of caches.data.actions_caches) {
+              if (cache.key == "cache-build-psych-android") {
+                console.log('Clearing ' + cache.key + '...')
+                await github.rest.actions.deleteActionsCacheById({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  cache_id: cache.id,
+                })
+                console.log("Cache cleared.")
+              }
+            }
+      - name: Uploading new cache
+        uses: actions/cache@v4.2.3
+        with:
+          # caching again since for some reason it doesnt work with the first post cache shit
+          key: cache-build-psych-android
+          path: |
+            .haxelib/
+            export/release/android/haxe/
+            export/release/android/obj/
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
