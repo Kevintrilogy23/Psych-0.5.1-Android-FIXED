@@ -45,6 +45,14 @@ jobs:
       - name: Setup Haxelib
         run: haxelib setup ~/haxelib
 
+      - name: Install Haxelib Libraries
+        run: |
+          haxelib install flixel
+          haxelib install flixel-addons
+          haxelib install flixel-ui
+          haxelib install flixel-tools
+          haxelib install hxcpp
+
       - name: Cache Haxelib
         uses: actions/cache@v4
         with:
