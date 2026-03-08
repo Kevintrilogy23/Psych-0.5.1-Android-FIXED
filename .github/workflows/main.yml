@@ -31,15 +31,6 @@ jobs:
           sdkmanager "platforms;android-33"
           sdkmanager "build-tools;33.0.2"
 
-      - name: Install Specific Libraries
-        run: |
-           haxelib install flixel 4.11.0
-           haxelib install flixel-addons 2.11.0
-           haxelib install flixel-ui 2.4.0
-           haxelib install hxcpp 4.2.1
-           haxelib set flixel 4.11.0
-
-
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         id: setup-ndk
