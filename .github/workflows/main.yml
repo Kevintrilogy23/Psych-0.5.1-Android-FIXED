@@ -53,6 +53,13 @@ jobs:
           haxelib install flixel-tools
           haxelib install hxcpp
 
+      - name: Install Flixel Sound Support
+        run: |
+          haxelib install flixel
+          haxelib install flixel-addons
+          haxelib install flixel-ui
+
+
       - name: Cache Haxelib
         uses: actions/cache@v4
         with:
