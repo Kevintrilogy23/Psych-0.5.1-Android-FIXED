@@ -1,121 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 
-	<!-- Application -->
-	<app title="FNF: Psych Engine 0.5.1"
-	file="PsychEngine051"
-	main="Main"
-	package="com.shadowmario.psychengine051"
-	version="0.2.7"
-	company="ShadowMario" />
+    <!-- Application -->
+    <app title="FNF: Psych Engine 0.5.1"
+         file="PsychEngine051"
+         main="Main"
+         package="com.shadowmario.psychengine051"
+         version="0.2.7"
+         company="ShadowMario"
+         preloader="flixel.system.FlxPreloader"/>
 
-	<!-- Switch ID -->
-	<set name="APP_ID" value="0x0100f6c013bbc000" />
+    <!-- Switch ID -->
+    <set name="APP_ID" value="0x0100f6c013bbc000"/>
 
-	<!-- Lua -->
-	<haxedef name="LINC_LUA_RELATIVE_DYNAMIC_LIB"/>
+    <!-- Lua -->
+    <haxedef name="LINC_LUA_RELATIVE_DYNAMIC_LIB"/>
 
-	<!-- Preloader -->
-	<app preloader="flixel.system.FlxPreloader"/>
+    <!-- Flash SWF -->
+    <set name="SWF_VERSION" value="11.8"/>
 
-	<!-- Flash SWF -->
-	<set name="SWF_VERSION" value="11.8"/>
+    <!-- Window -->
+    <window width="1280"
+            height="720"
+            background="#000000"
+            hardware="true"
+            vsync="false"/>
 
-	<!-- Window -->
-	<window width="1280" height="720" background="#000000" hardware="true" vsync="false"/>
+    <window if="desktop"
+            fullscreen="false"
+            resizable="true"
+            orientation="landscape"/>
 
-	<window if="desktop"
-	fullscreen="false"
-	resizable="true"
-	orientation="landscape"/>
+    <window if="mobile"
+            fullscreen="true"
+            orientation="landscape"
+            width="1280"
+            height="720"
+            resizable="false"/>
 
-	<window if="mobile"
-	fullscreen="true"
-	orientation="landscape"
-	width="1280"
-	height="720"
-	resizable="false"/>
+    <!-- Android Settings -->
+    <section if="android">
 
-	<!-- Android Settings -->
-	<section if="android">
+        <set name="ANDROID_MIN_SDK_VERSION" value="21"/>
+        <set name="ANDROID_TARGET_SDK_VERSION" value="33"/>
+        <set name="ANDROID_COMPILE_SDK_VERSION" value="33"/>
 
-		<set name="ANDROID_MIN_SDK_VERSION" value="21"/>
-		<set name="ANDROID_TARGET_SDK_VERSION" value="33"/>
-		<set name="ANDROID_COMPILE_SDK_VERSION" value="33"/>
+        <!-- CPU -->
+        <architecture name="armv7"/>
+        <architecture name="arm64"/>
 
-		<!-- CPU -->
-		<architecture name="armv7"/>
-		<architecture name="arm64"/>
+        <!-- OpenGL -->
+        <haxedef name="OPENGL_ES3"/>
 
-		<!-- OpenGL -->
-		<haxedef name="OPENGL_ES3"/>
+        <!-- Mobile Controls -->
+        <define name="MOBILE_CONTROLS_ALLOWED"/>
 
-		<!-- Enable mobile controls -->
-		<define name="MOBILE_CONTROLS_ALLOWED"/>
+    </section>
 
-	</section>
+    <!-- Build Paths -->
+    <set name="BUILD_DIR" value="export/debug" if="debug"/>
+    <set name="BUILD_DIR" value="export/release" unless="debug"/>
 
-	<!-- Build Paths -->
-	<set name="BUILD_DIR" value="export/debug" if="debug"/>
-	<set name="BUILD_DIR" value="export/release" unless="debug"/>
+    <!-- Source -->
+    <classpath name="source"/>
 
-	<classpath name="source"/>
+    <!-- Assets -->
+    <assets path="assets/preload" rename="assets"/>
 
-	<!-- Assets -->
-	<assets path="assets/preload" rename="assets"/>
+    <assets path="assets/songs"/>
+    <assets path="assets/shared"/>
 
-	<!-- Psych Features -->
-	<define name="MODS_ALLOWED" if="desktop"/>
-	<define name="LUA_ALLOWED" if="desktop || android"/>
-	<define name="ACHIEVEMENTS_ALLOWED"/>
-	<define name="VIDEOS_ALLOWED" if="windows || android"/>
-	<define name="PSYCH_WATERMARKS"/>
+    <!-- Videos -->
+    <assets path="assets/videos" if="VIDEOS_ALLOWED"/>
 
-	<!-- Preload -->
-	<define name="PRELOAD_ALL" unless="web"/>
+    <!-- Mods -->
+    <assets path="example_mods" rename="mods" embed="false" if="desktop"/>
 
-	<!-- Video -->
-	<assets path="assets/videos" if="VIDEOS_ALLOWED"/>
+    <!-- Fonts -->
+    <assets path="assets/fonts" embed="true"/>
 
-	<!-- Mods -->
-	<assets path="example_mods" rename="mods" embed="false" if="MODS_ALLOWED"/>
+    <!-- Psych Features -->
+    <define name="MODS_ALLOWED" if="desktop"/>
+    <define name="LUA_ALLOWED" if="desktop || android"/>
+    <define name="ACHIEVEMENTS_ALLOWED"/>
+    <define name="VIDEOS_ALLOWED" if="windows || android"/>
+    <define name="PSYCH_WATERMARKS"/>
 
-	<!-- Fonts -->
-	<assets path="assets/fonts" embed="true"/>
+    <!-- Preload -->
+    <define name="PRELOAD_ALL" unless="web"/>
 
-	<!-- Libraries -->
-	<haxelib name="flixel"/>
-	<haxelib name="flixel-addons"/>
-	<haxelib name="flixel-ui"/>
-	<haxelib name="hscript"/>
+    <!-- Libraries -->
+    <haxelib name="flixel"/>
+    <haxelib name="flixel-addons"/>
+    <haxelib name="flixel-ui"/>
+    <haxelib name="hscript"/>
 
-	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
-	<haxelib name="discord_rpc" if="desktop"/>
+    <haxelib name="linc_luajit" if="LUA_ALLOWED"/>
+    <haxelib name="discord_rpc" if="desktop"/>
 
-	<haxelib name="extension-webview" if="android"/>
-	<haxelib name="extension-androidtools" if="android"/>
+    <haxelib name="extension-webview" if="android"/>
+    <haxelib name="extension-androidtools" if="android"/>
 
-	<!-- Performance -->
-	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/>
-	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
-	<haxedef name="NAPE_RELEASE_BUILD" unless="debug"/>
+    <!-- Performance -->
+    <haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/>
+    <haxedef name="FLX_NO_DEBUG" unless="debug"/>
+    <haxedef name="NAPE_RELEASE_BUILD" unless="debug"/>
 
-	<haxedef name="HXCPP_CHECK_POINTER" if="release"/>
-	<haxedef name="HXCPP_STACK_LINE" if="release"/>
+    <haxedef name="HXCPP_CHECK_POINTER" if="release"/>
+    <haxedef name="HXCPP_STACK_LINE" if="release"/>
 
-	<!-- Android Permissions -->
-	<section if="android">
+    <!-- Android Permissions -->
+    <section if="android">
 
-		<android permission="android.permission.INTERNET"/>
-		<android permission="android.permission.WRITE_EXTERNAL_STORAGE"/>
-		<android permission="android.permission.READ_EXTERNAL_STORAGE"/>
+        <android permission="android.permission.INTERNET"/>
+        <android permission="android.permission.READ_EXTERNAL_STORAGE"/>
+        <android permission="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
-	</section>
+    </section>
 
-	<!-- Icons -->
-	<icon path="art/icon16.png" size="16"/>
-	<icon path="art/icon32.png" size="32"/>
-	<icon path="art/icon64.png" size="64"/>
-	<icon path="art/iconOG.png"/>
+    <!-- Icons -->
+    <icon path="art/icon16.png" size="16"/>
+    <icon path="art/icon32.png" size="32"/>
+    <icon path="art/icon64.png" size="64"/>
+    <icon path="art/iconOG.png"/>
 
 </project>
