@@ -52,6 +52,12 @@ jobs:
           haxelib install flixel-ui
           haxelib install flixel-tools
           haxelib install hxcpp
+          haxelib install flixel 4.11.0
+          haxelib install flixel-addons 2.11.0
+          haxelib install flixel-ui 2.4.0
+          haxelib install hscript 2.4.0
+          haxelib install hxcpp 4.2.1
+          haxelib set flixel 4.11.0
 
       - name: Install Flixel Sound Support
         run: |
