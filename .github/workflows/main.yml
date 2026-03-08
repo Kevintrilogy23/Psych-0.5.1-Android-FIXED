@@ -2,20 +2,14 @@
 
 name: Buildsus
 
-# Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   buildAndroid:
     name: buildAndroid
     runs-on: ubuntu-latest
@@ -46,7 +40,7 @@ jobs:
       - name: Install Haxelib
         run: |
           haxelib setup ~/haxelib
-          haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp > /dev/null
+          haxelib install hxcpp > /dev/null
           haxelib install lime 7.9.0
           haxelib install openfl 9.1.0
           haxelib --never install flixel
@@ -59,8 +53,10 @@ jobs:
           haxelib install flixel-addons
           haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
           haxelib git flxanimate https://github.com/Dot-Stuff/flxanimate
-          haxelib git linc_luajit https://github.com/nebulazorua/linc_luajit
-          haxelib git extension-androidtools https://github.com/MAJigsaw77/extension-androidtools
+          haxelib git linc_luajit https://github.com/MobilePorting/linc_luajit
+          haxelib git extension-webview https://github.com/MobilePorting/extension-webview
+          haxelib git extension-videoview https://github.com/MobilePorting/extension-videoview
+          haxelib git extension-androidtools https://github.com/MobilePorting/extension-androidtools
           haxelib list
 
       - name: Create Version Tag
