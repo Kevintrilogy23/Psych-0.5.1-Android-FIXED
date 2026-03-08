@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
 
     runs-on: ubuntu-latest
@@ -23,16 +22,16 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK
+      - name: Install Android Platforms
         run: |
           sdkmanager "platform-tools"
-          sdkmanager "platforms;android-30"
-          sdkmanager "build-tools;30.0.3"
+          sdkmanager "platforms;android-33"
+          sdkmanager "build-tools;33.0.2"
 
-      - name: Setup NDK
+      - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
@@ -46,28 +45,30 @@ jobs:
       - name: Setup Haxelib
         run: haxelib setup ~/haxelib
 
-      # CACHE HAXELIB
       - name: Cache Haxelib
         uses: actions/cache@v4
         with:
           path: |
             ~/haxelib
             ~/.cache/haxelib
-          key: haxelib-${{ runner.os }}-4.2.5
+          key: haxelib-${{ runner.os }}-lime8
+          restore-keys: |
+            haxelib-${{ runner.os }}
 
-      # CACHE HXCPP
       - name: Cache hxcpp
         uses: actions/cache@v4
         with:
           path: |
             ~/.hxcpp
           key: hxcpp-${{ runner.os }}
+          restore-keys: |
+            hxcpp-${{ runner.os }}
 
-      - name: Install Libraries
+      - name: Install Haxelib Libraries
         run: |
           haxelib install hxcpp --quiet
-          haxelib install lime 7.9.0 --quiet
-          haxelib install openfl 9.1.0 --quiet
+          haxelib install lime 8.0.2 --quiet
+          haxelib install openfl 9.3.3 --quiet
           haxelib install flixel --quiet
           haxelib install flixel-tools --quiet
           haxelib install flixel-ui --quiet
@@ -92,39 +93,22 @@ jobs:
           git clone https://github.com/MAJigsaw77/extension-androidtools extension-androidtools
           haxelib dev extension-androidtools extension-androidtools
 
+      - name: Rebuild LuaJIT
+        run: |
+          haxelib run lime rebuild linc_luajit android
+
       - name: Configure Lime
         run: |
           haxelib run lime setup -y
           haxelib run lime config ANDROID_SDK $ANDROID_HOME
           haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME
           haxelib run lime config JAVA_HOME $JAVA_HOME
+          haxelib set lime 8.0.2
+          haxelib set openfl 9.3.3
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-      - name: Setup Java JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Configure Lime Android
-        run: |
-          haxelib run lime setup android -noprompt
-
-      - name: Set Android Paths
-        run: |
-          haxelib run lime config ANDROID_SDK $ANDROID_HOME
-          haxelib run lime config ANDROID_NDK /caminho/para/o/ndk
-          haxelib run lime config JAVA_HOME $JAVA_HOME
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Rebuild LuaJIT
-        run: |
-          haxelib run lime rebuild linc_luajit android
-        
-      - name: Compile
+      - name: Compile Game
         run: |
           haxelib run lime build android -release
 
