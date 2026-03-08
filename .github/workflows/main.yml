@@ -2,7 +2,7 @@ name: Buildsus
 
 on:
   push:
-   branches: [ main ]
+    branches: [ main ]
 
   pull_request:
     branches: [ main ]
@@ -47,8 +47,26 @@ jobs:
           haxe-version: 4.2.5
 
       - name: Setup Haxelib
-        run: |
-          haxelib setup ~/haxelib
+        run: haxelib setup ~/haxelib
+
+      # CACHE HAXELIB
+      - name: Cache Haxelib
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/haxelib
+            ~/.cache/haxelib
+          key: haxelib-${{ runner.os }}-4.2.5
+          restore-keys: |
+            haxelib-${{ runner.os }}
+
+      # CACHE HXCPP
+      - name: Cache hxcpp
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.hxcpp
+          key: hxcpp-${{ runner.os }}
 
       - name: Install Base Libraries
         run: |
@@ -71,7 +89,7 @@ jobs:
           git clone https://github.com/Dot-Stuff/flxanimate flxanimate
           haxelib dev flxanimate flxanimate
 
-          git clone https://github.com/MAJigsaw77/linc_luajit linc_luajit
+          git clone https://github.com/superpowers04/linc_luajit linc_luajit
           haxelib dev linc_luajit linc_luajit
 
           git clone https://github.com/MatheusSilver/extension-webview extension-webview
@@ -84,6 +102,10 @@ jobs:
           haxelib dev extension-androidtools extension-androidtools
 
           haxelib list
+
+      - name: Rebuild LuaJIT
+        run: |
+          haxelib run lime rebuild linc_luajit android
 
       - name: Configure Lime
         run: |
