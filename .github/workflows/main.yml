@@ -92,10 +92,6 @@ jobs:
           git clone https://github.com/MAJigsaw77/extension-androidtools extension-androidtools
           haxelib dev extension-androidtools extension-androidtools
 
-      - name: Rebuild LuaJIT
-        run: |
-          haxelib run lime rebuild linc_luajit android
-
       - name: Configure Lime
         run: |
           haxelib run lime setup -y
@@ -124,7 +120,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-
+      - name: Rebuild LuaJIT
+        run: |
+          haxelib run lime rebuild linc_luajit android
+        
       - name: Compile
         run: |
           haxelib run lime build android -release
