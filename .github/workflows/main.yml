@@ -3,16 +3,20 @@ name: Buildsus
 on:
   push:
     branches: [ main ]
+
   pull_request:
     branches: [ main ]
+
   workflow_dispatch:
 
 jobs:
+
   buildAndroid:
     name: Build Android
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -23,7 +27,13 @@ jobs:
           java-version: 17
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android Platforms
+        run: |
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-30"
+          sdkmanager "build-tools;30.0.3"
 
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
@@ -40,7 +50,7 @@ jobs:
         run: |
           haxelib setup ~/haxelib
 
-      - name: Install Libraries
+      - name: Install Haxelib Libraries
         run: |
           haxelib install hxcpp --quiet
           haxelib install lime 7.9.0 --quiet
@@ -71,14 +81,13 @@ jobs:
           haxelib run lime config ANDROID_SETUP true
           haxelib set lime 7.9.0
           haxelib set openfl 9.1.0
-
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
       - name: Create Version
         run: echo "${{ github.run_id }}" > VERSION
 
-      - name: Compile Game
+      - name: Compile Android
         run: |
           haxelib run lime build android -release --app-version="4.0.0-${{ github.run_id }}"
 
