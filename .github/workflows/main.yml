@@ -2,7 +2,7 @@ name: Buildsus
 
 on:
   push:
-    branches: [ main ]
+   branches: [ main ]
 
   pull_request:
     branches: [ main ]
@@ -50,7 +50,7 @@ jobs:
         run: |
           haxelib setup ~/haxelib
 
-      - name: Install Haxelib Libraries
+      - name: Install Base Libraries
         run: |
           haxelib install hxcpp --quiet
           haxelib install lime 7.9.0 --quiet
@@ -63,12 +63,25 @@ jobs:
           haxelib install hxp --quiet
           haxelib install hscript --quiet
 
-          haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
-          haxelib git flxanimate https://github.com/Dot-Stuff/flxanimate
-          haxelib git linc_luajit https://github.com/MAJigsaw77/linc_luajit
-          haxelib git extension-webview https://github.com/MatheusSilver/extension-webview
-          haxelib git extension-videoview https://github.com/MAJigsaw77/extension-videoview
-          haxelib git extension-androidtools https://github.com/MAJigsaw77/extension-androidtools
+      - name: Install Git Libraries
+        run: |
+          git clone https://github.com/Aidan63/linc_discord-rpc discord_rpc
+          haxelib dev discord_rpc discord_rpc
+
+          git clone https://github.com/Dot-Stuff/flxanimate flxanimate
+          haxelib dev flxanimate flxanimate
+
+          git clone https://github.com/MAJigsaw77/linc_luajit linc_luajit
+          haxelib dev linc_luajit linc_luajit
+
+          git clone https://github.com/MatheusSilver/extension-webview extension-webview
+          haxelib dev extension-webview extension-webview
+
+          git clone https://github.com/MAJigsaw77/extension-videoview extension-videoview
+          haxelib dev extension-videoview extension-videoview
+
+          git clone https://github.com/MAJigsaw77/extension-androidtools extension-androidtools
+          haxelib dev extension-androidtools extension-androidtools
 
           haxelib list
 
@@ -87,7 +100,7 @@ jobs:
       - name: Create Version
         run: echo "${{ github.run_id }}" > VERSION
 
-      - name: Compile Android
+      - name: Compile Game
         run: |
           haxelib run lime build android -release --app-version="4.0.0-${{ github.run_id }}"
 
