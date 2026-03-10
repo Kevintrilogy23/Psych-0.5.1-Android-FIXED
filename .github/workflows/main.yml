@@ -1,4 +1,4 @@
-name: Build Android
+name: APK BUILD
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -45,27 +44,6 @@ jobs:
       - name: Setup Haxelib
         run: haxelib setup ~/haxelib
 
-      - name: Install Haxelib Libraries
-        run: |
-          haxelib install flixel
-          haxelib install flixel-addons
-          haxelib install flixel-ui
-          haxelib install flixel-tools
-          haxelib install hxcpp
-          haxelib install flixel 4.11.0
-          haxelib install flixel-addons 2.11.0
-          haxelib install flixel-ui 2.4.0
-          haxelib install hscript 2.4.0
-          haxelib install hxcpp 4.2.1
-          haxelib set flixel 4.11.0
-
-      - name: Install Flixel Sound Support
-        run: |
-          haxelib install flixel
-          haxelib install flixel-addons
-          haxelib install flixel-ui
-
-
       - name: Cache Haxelib
         uses: actions/cache@v4
         with:
@@ -79,26 +57,34 @@ jobs:
       - name: Cache hxcpp
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.hxcpp
+          path: ~/.hxcpp
           key: hxcpp-${{ runner.os }}
           restore-keys: |
             hxcpp-${{ runner.os }}
 
       - name: Install Haxelib Libraries
         run: |
-          haxelib install hxcpp --quiet
+          haxelib install hxcpp 4.2.1 --quiet
           haxelib install lime 8.0.2 --quiet
           haxelib install openfl 9.3.3 --quiet
-          haxelib install flixel --quiet
+          haxelib install flixel 4.11.0 --quiet
           haxelib install flixel-tools --quiet
-          haxelib install flixel-ui --quiet
-          haxelib install flixel-addons --quiet
+          haxelib install flixel-ui 2.5.0 --quiet
+          haxelib install flixel-addons 2.11.0 --quiet
           haxelib install hxCodec --quiet
-          haxelib install hscript --quiet
+          haxelib install hscript 2.4.0 --quiet
+          haxelib install newgrounds 1.1.5 --quiet
+          haxelib set hxcpp 4.2.1
+          haxelib set lime 8.0.2
+          haxelib set openfl 9.3.3
+          haxelib set flixel 4.11.0
+          haxelib set flixel-ui 2.5.0
+          haxelib set flixel-addons 2.11.0
 
       - name: Install Git Libraries
         run: |
+          haxelib git polymod https://github.com/larsiusprime/polymod
+
           git clone https://github.com/Aidan63/linc_discord-rpc discord_rpc
           haxelib dev discord_rpc discord_rpc
 
@@ -117,25 +103,44 @@ jobs:
       - name: Configure Lime
         run: |
           haxelib run lime setup -y
-          haxelib run lime setup android
+          haxelib run lime setup android -y
           haxelib run lime config ANDROID_SDK $ANDROID_HOME
           haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME
           haxelib run lime config JAVA_HOME $JAVA_HOME
-          haxelib set lime 8.0.2
-          haxelib set openfl 9.3.3
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
       - name: Rebuild LuaJIT
-        run: |
-          haxelib run lime rebuild linc_luajit android
+        run: haxelib run lime rebuild linc_luajit android -v
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
       - name: Compile Game
+        id: compile
+        run: haxelib run lime build android -debug -v 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
+        continue-on-error: true
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      - name: Show Compile Log Tail
+        if: always()
         run: |
-          haxelib run lime build android -release
+          echo "=== LAST 150 LINES OF BUILD LOG ==="
+          tail -150 build.log 2>/dev/null || echo "build.log not found"
+
+      - name: Find APK
+        if: always()
+        run: |
+          echo "=== Searching for APK ==="
+          find . -name "*.apk" 2>/dev/null || echo "NO APK FOUND ANYWHERE"
+          echo ""
+          echo "=== Export folder ==="
+          ls -la export/ 2>/dev/null || echo "export/ folder does NOT exist - build failed"
 
       - name: Upload APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Android Build
-          path: export/release/android/bin/app/build/outputs/apk
+          name: FNF-Android-Build
+          path: export/debug/android/bin/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
